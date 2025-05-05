@@ -4,6 +4,10 @@ import { argv, stdin as input, stdout as output } from 'process';
 import fs from 'fs/promises';
 import { statSync } from 'fs';
 import path from 'path';
+import { createReadStream } from 'fs';
+import { writeFile } from 'fs/promises';
+import { unlink } from 'fs/promises';
+import { mkdir } from 'fs/promises';
 
 /* Parse username from CLI args */
 const usernameArg = argv.find((arg) => arg.startsWith('--username='));
@@ -36,6 +40,18 @@ rl.on('line', async (line) => {
       case '.exit':
         exitApp();
         return;
+      case 'cat':
+        await handleCat(args[0]);
+        break;
+      case 'add':
+        await handleAdd(args[0]);
+        break;
+      case 'rm':
+        await handleRm(args[0]);
+        break;
+      case 'mkdir':
+        await handleMkdir(args[0]);
+        break;
       default:
         console.log('Invalid input');
     }
@@ -48,7 +64,8 @@ rl.on('line', async (line) => {
 
 function handleUp() {
   const parent = path.dirname(currentDir);
-  // Prevent going above root (like C:\)
+
+  // Preventing going above root (like C:\)
   if (parent !== currentDir) {
     currentDir = parent;
   }
@@ -65,6 +82,42 @@ async function handleCd(targetPath) {
   if (!stats.isDirectory()) throw new Error();
 
   currentDir = resolvedPath;
+}
+
+async function handleCat(filePath) {
+  if (!filePath) throw new Error();
+
+  const fullPath = path.resolve(currentDir, filePath);
+
+  const stream = createReadStream(fullPath, { encoding: 'utf8' });
+  stream.on('error', () => {
+    console.log('Operation failed');
+  });
+  stream.pipe(process.stdout);
+
+  // Wait for stream to end before printing directory again
+  await new Promise((resolve) => stream.on('end', resolve));
+}
+
+async function handleAdd(filename) {
+  if (!filename) throw new Error();
+  debugger;
+  const filePath = path.join(currentDir, filename);
+  await writeFile(filePath, '');
+}
+
+async function handleRm(filePath) {
+  if (!filePath) throw new Error();
+
+  const fullPath = path.resolve(currentDir, filePath);
+  await unlink(fullPath);
+}
+
+async function handleMkdir(dirName) {
+  if (!dirName) throw new Error();
+
+  const dirPath = path.join(currentDir, dirName);
+  await mkdir(dirPath);
 }
 
 async function handleLs() {
