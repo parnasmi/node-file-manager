@@ -26,6 +26,11 @@ rl.on('line', async (line) => {
   const trimmed = line.trim();
   const [command, ...args] = trimmed.split(' ');
 
+  if (!command || typeof command !== 'string') {
+    console.log('Invalid input');
+    return;
+  }
+
   try {
     switch (command) {
       case 'up':
