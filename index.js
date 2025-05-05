@@ -6,7 +6,7 @@ import { statSync } from 'fs';
 import path from 'path';
 
 /* Parse username from CLI args */
-const usernameArg = argv.find(arg => arg.startsWith('--username='));
+const usernameArg = argv.find((arg) => arg.startsWith('--username='));
 const username = usernameArg?.split('=')[1] || 'Someone';
 
 /* Set starting directory to user's home */
@@ -47,44 +47,44 @@ rl.on('line', async (line) => {
 });
 
 function handleUp() {
-    const parent = path.dirname(currentDir);
-    // Prevent going above root (like C:\)
-    if (parent !== currentDir) {
-      currentDir = parent;
-    }
+  const parent = path.dirname(currentDir);
+  // Prevent going above root (like C:\)
+  if (parent !== currentDir) {
+    currentDir = parent;
+  }
 }
 
 async function handleCd(targetPath) {
-    if (!targetPath) throw new Error();
-  
-    const resolvedPath = path.isAbsolute(targetPath)
-      ? targetPath
-      : path.resolve(currentDir, targetPath);
-  
-    const stats = await fs.stat(resolvedPath);
-    if (!stats.isDirectory()) throw new Error();
-  
-    currentDir = resolvedPath;
+  if (!targetPath) throw new Error();
+
+  const resolvedPath = path.isAbsolute(targetPath)
+    ? targetPath
+    : path.resolve(currentDir, targetPath);
+
+  const stats = await fs.stat(resolvedPath);
+  if (!stats.isDirectory()) throw new Error();
+
+  currentDir = resolvedPath;
 }
 
 async function handleLs() {
-    const items = await fs.readdir(currentDir);
-    const detailed = await Promise.all(
-        items.map(async (name) => {
-        const fullPath = path.join(currentDir, name);
-        const isFile = statSync(fullPath).isFile();
-        return { Name: name, Type: isFile ? 'file' : 'directory' };
-        })
-    );
+  const items = await fs.readdir(currentDir);
+  const detailed = await Promise.all(
+    items.map(async (name) => {
+      const fullPath = path.join(currentDir, name);
+      const isFile = statSync(fullPath).isFile();
+      return { Name: name, Type: isFile ? 'file' : 'directory' };
+    }),
+  );
 
-    // Sort: directories first, then files
-    detailed.sort((a, b) => {
-        if (a.Type === b.Type) return a.Name.localeCompare(b.Name);
-        return a.Type === 'directory' ? -1 : 1;
-    });
+  // Sort: directories first, then files
+  detailed.sort((a, b) => {
+    if (a.Type === b.Type) return a.Name.localeCompare(b.Name);
+    return a.Type === 'directory' ? -1 : 1;
+  });
 
-    // Format as table
-    console.table(detailed);
+  // Format as table
+  console.table(detailed);
 }
 
 rl.on('SIGINT', () => {
